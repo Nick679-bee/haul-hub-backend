@@ -1,5 +1,4 @@
-class Api::V1::TrucksController < ApplicationController
-  before_action :authenticate_user!
+class Api::V1::TrucksController < Api::BaseController
   before_action :set_truck, only: [:show, :update, :destroy]
 
   # GET /api/v1/trucks

@@ -8,6 +8,19 @@ class User < ApplicationRecord
   # Associations
   has_many :trucks, dependent: :destroy
 
+  # Hauls
+has_many :hauls, dependent: :destroy # Hauls created by user as customer
+has_many :assigned_hauls, class_name: 'Haul', foreign_key: 'driver_id', dependent: :nullify # Hauls assigned as driver
+
+def active_hauls_as_driver
+  assigned_hauls.where.not(status: ['completed', 'cancelled'])
+end
+
+def completed_hauls_as_driver
+  assigned_hauls.where(status: 'completed')
+end
+
+
   # Validations
   validates :name, presence: true
   validates :role, presence: true, inclusion: { in: %w[admin driver dispatcher] }

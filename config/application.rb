@@ -40,5 +40,18 @@ module HaulHubBackend
     # Middleware like session, flash, cookies can be added back manually.
     # Skip views, helpers and assets when generating a new resource.
     config.api_only = true
+
+    # Add back cookies and session middleware
+    config.middleware.use ActionDispatch::Cookies
+    config.middleware.use ActionDispatch::Session::CookieStore, key: '_haul_hub_session'
+    
+    # Required for API cookie/session handling
+    config.middleware.use Rack::MethodOverride
+    
+    # Configure same-site cookie policy for modern browsers
+    config.action_dispatch.cookies_same_site_protection = :lax
+    
+    # Enable forgery protection with API (optional but recommended)
+    config.action_controller.default_protect_from_forgery = true
   end
 end
