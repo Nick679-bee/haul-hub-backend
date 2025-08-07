@@ -6,7 +6,7 @@ class Api::V1::TrucksController < Api::BaseController
     @trucks = current_user.trucks
     render json: {
       status: 'success',
-      data: @trucks.map(&:full_details)
+      data: { trucks: @trucks.map(&:full_details) }
     }
   end
 
@@ -14,7 +14,7 @@ class Api::V1::TrucksController < Api::BaseController
   def show
     render json: {
       status: 'success',
-      data: @truck.full_details
+      data: { truck: @truck.full_details }
     }
   end
 
@@ -26,7 +26,7 @@ class Api::V1::TrucksController < Api::BaseController
       render json: {
         status: 'success',
         message: 'Truck created successfully',
-        data: @truck.full_details
+        data: { truck: @truck.full_details }
       }, status: :created
     else
       render json: {
@@ -43,7 +43,7 @@ class Api::V1::TrucksController < Api::BaseController
       render json: {
         status: 'success',
         message: 'Truck updated successfully',
-        data: @truck.full_details
+        data: { truck: @truck.full_details }
       }
     else
       render json: {
@@ -75,7 +75,7 @@ class Api::V1::TrucksController < Api::BaseController
     @trucks = current_user.trucks.available
     render json: {
       status: 'success',
-      data: @trucks.map(&:full_details)
+      data: { trucks: @trucks.map(&:full_details) }
     }
   end
 
@@ -84,7 +84,7 @@ class Api::V1::TrucksController < Api::BaseController
     @trucks = current_user.trucks.expiring_soon
     render json: {
       status: 'success',
-      data: @trucks.map(&:full_details)
+      data: { trucks: @trucks.map(&:full_details) }
     }
   end
 
@@ -93,7 +93,7 @@ class Api::V1::TrucksController < Api::BaseController
     @trucks = current_user.trucks.needs_maintenance
     render json: {
       status: 'success',
-      data: @trucks.map(&:full_details)
+      data: { trucks: @trucks.map(&:full_details) }
     }
   end
 

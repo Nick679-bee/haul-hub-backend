@@ -1,18 +1,21 @@
 class Api::V1::AuthController < ApplicationController
-  # POST /api/v1/auth/login
+
   def login
     user = User.find_by(email: params[:email])
     
     if user&.valid_password?(params[:password])
-      # Create JWT token manually
-      payload = { 
-        user_id: user.id,
-        email: user.email,
-        exp: 24.hours.from_now.to_i
-      }
-      secret = Rails.application.credentials.devise_jwt_secret_key || ENV['DEVISE_JWT_SECRET_KEY']
-      token = JWT.encode(payload, secret, 'HS256')
+      secret = Rails.application.credentials.devise_jwt_secret_key || ENV['DEVISE_JWT_SECRET_KEY'] || 'development_jwt_secret_key_please_change_in_production_environment_2024'
       
+      token = JWT.encode(
+        { 
+          user_id: user.id,
+          email: user.email,
+          role: user.role,
+          exp: 24.hours.from_now.to_i 
+        }, 
+        secret
+      )
+
       render json: {
         status: 'success',
         message: 'Login successful',
@@ -33,42 +36,54 @@ class Api::V1::AuthController < ApplicationController
       }, status: :unauthorized
     end
   end
-  
-  # POST /api/v1/auth/logout
+
   def logout
-    # JWT tokens are stateless, so logout is handled client-side
-    # The token will be invalidated on the next request if using JWT denylist
+    # In a real application, you might want to blacklist the token
+    # For now, we'll just return a success response
     render json: {
       status: 'success',
       message: 'Logout successful'
     }
   end
-  
-  # GET /api/v1/auth/me
+
   def me
-    # Extract user from JWT token
-    token = request.headers['Authorization']&.split(' ')&.last
-    return render json: { status: 'error', message: 'No token provided' }, status: :unauthorized unless token
+    secret = Rails.application.credentials.devise_jwt_secret_key || ENV['DEVISE_JWT_SECRET_KEY'] || 'development_jwt_secret_key_please_change_in_production_environment_2024'
     
     begin
-      secret = Rails.application.credentials.devise_jwt_secret_key || ENV['DEVISE_JWT_SECRET_KEY']
-      decoded = JWT.decode(token, secret, true, { algorithm: 'HS256' })
-      user_id = decoded[0]['user_id']
-      user = User.find(user_id)
+      token = request.headers['Authorization']&.split(' ')&.last
       
-      render json: {
-        status: 'success',
-        data: {
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role
+      if token
+        decoded_token = JWT.decode(token, secret, true, { algorithm: 'HS256' })
+        user_id = decoded_token[0]['user_id']
+        user = User.find(user_id)
+        
+        render json: {
+          status: 'success',
+          data: {
+            user: {
+              id: user.id,
+              name: user.name,
+              email: user.email,
+              role: user.role
+            }
           }
         }
-      }
-    rescue JWT::DecodeError, ActiveRecord::RecordNotFound
-      render json: { status: 'error', message: 'Invalid token' }, status: :unauthorized
+      else
+        render json: {
+          status: 'error',
+          message: 'No token provided'
+        }, status: :unauthorized
+      end
+    rescue JWT::DecodeError => e
+      render json: {
+        status: 'error',
+        message: 'Invalid token'
+      }, status: :unauthorized
+    rescue ActiveRecord::RecordNotFound
+      render json: {
+        status: 'error',
+        message: 'User not found'
+      }, status: :not_found
     end
   end
 end
